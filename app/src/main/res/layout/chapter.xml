@@ -3,20 +3,15 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-  <ScrollView
-      android:layout_width="match_parent"
-      android:layout_height="match_parent">
-
     <WebView
         android:id="@+id/chapter_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"/>
     <!--<TextView-->
         <!--android:id="@+id/chapter_text"-->
         <!--android:layout_width="match_parent"-->
         <!--android:layout_height="wrap_content"-->
         <!--android:visibility="invisible" />-->
-  </ScrollView>
   <TextView
       android:id="@+id/loading_text"
       android:layout_width="match_parent"

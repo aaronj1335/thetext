@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import android.widget.TextView;
 
 import com.aaronstacy.thetext.R;
 import com.aaronstacy.thetext.TheTextApp;
@@ -32,7 +31,6 @@ import rx.subjects.PublishSubject;
 
 public final class ChapterFragment extends Fragment {
   private WebView chapterTextView;
-//  private TextView loadingView;
   private BehaviorSubject<ChapterReference> chapterReferenceInput =
       BehaviorSubject.create(ChapterReference.builder().book("Genesis").chapter(1).build());
   @Inject PublishSubject<Lookup> lookups;
@@ -67,14 +65,19 @@ public final class ChapterFragment extends Fragment {
                                                @Nullable Bundle savedInstanceState) {
     View rootView = inflater.inflate(R.layout.chapter, container, false);
     chapterTextView = (WebView) rootView.findViewById(R.id.chapter_text);
-//    loadingView = (TextView) rootView.findViewById(R.id.loading_text);
     return rootView;
+  }
+
+  @Override public void onSaveInstanceState(Bundle outState) {
+    outState.putParcelable(Chapter.TABLE, chapterReferenceInput.getValue());
+    super.onSaveInstanceState(outState);
   }
 
   @Override public void onResume() {
     super.onResume();
+    Observable<ChapterReference> distinctChapterReferences = chapterReferenceInput.distinct();
 
-    Observable<Model> references = chapterReferenceInput
+    Observable<Model> references = distinctChapterReferences
         .map(new Func1<ChapterReference, Model>() {
           @Override public Model call(ChapterReference chapterReference) {
             return Model.builder().chapterReference(chapterReference).build();
@@ -113,7 +116,7 @@ public final class ChapterFragment extends Fragment {
         // If chapterReferenceInput receives a new value before the database call returns a chapter,
         // the previous chapter could be emitted, creating a momentarily invalid state. This ensures
         // that Chapter's are only emitted if they match the latest inputChapterReference.
-        .withLatestFrom(chapterReferenceInput, new Func2<Model, ChapterReference, Model>() {
+        .withLatestFrom(distinctChapterReferences, new Func2<Model, ChapterReference, Model>() {
           @Override public Model call(Model state, ChapterReference latestInputChapterReference) {
             return latestInputChapterReference.equals(state.chapterReference())? state : null;
           }
@@ -143,11 +146,9 @@ public final class ChapterFragment extends Fragment {
   private void bind(Model model) {
     if (model.chapter() == null) {
       chapterTextView.setVisibility(View.INVISIBLE);
-//      loadingView.setVisibility(View.VISIBLE);
     } else {
       chapterTextView.loadData(model.chapter().text(), "text/html", null);
       chapterTextView.setVisibility(View.VISIBLE);
-//      loadingView.setVisibility(View.INVISIBLE);
     }
   }
 

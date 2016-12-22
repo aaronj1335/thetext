@@ -6,9 +6,14 @@ import com.aaronstacy.thetext.db.ChapterReference;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.*;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class, sdk = 23)
 public class ChapterReferenceTest {
   private static final String[] BOOKS = {"Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
       "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles",
@@ -24,7 +29,6 @@ public class ChapterReferenceTest {
       36, 10, 13, 10, 42, 150, 31, 12, 8, 66, 52, 5, 48, 12, 14, 3, 9, 1, 4, 7, 3, 3, 3, 2, 14, 4,
       28, 16, 24, 21, 28, 16, 16, 13, 6, 6, 4, 4, 5, 3, 6, 4, 3, 1, 13, 5, 5, 3, 5, 1, 1, 1, 22};
 
-  @Ignore("need to change BookReference.BOOK_TO_ID to JVM-friendly Map")
   @Test public void fromIndexIsCorrect() throws Exception {
     int total = 0;
     for (int i = 0; i < BOOKS.length; i++) {

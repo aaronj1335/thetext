@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import com.aaronstacy.thetext.api.LookupCacher;
+import com.squareup.leakcanary.LeakCanary;
 
 import javax.inject.Inject;
 
@@ -14,6 +15,11 @@ public final class TheTextApp extends Application {
 
   @Override public void onCreate() {
     super.onCreate();
+
+    if (LeakCanary.isInAnalyzerProcess(this)) {
+      return;
+    }
+    LeakCanary.install(this);
 
     component = DaggerTheTextComponent.builder().theTextModule(new TheTextModule(this)).build();
 

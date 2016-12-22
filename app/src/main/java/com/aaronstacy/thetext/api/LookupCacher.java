@@ -10,9 +10,11 @@ import com.aaronstacy.thetext.db.Lookup;
 import com.squareup.sqlbrite.BriteDatabase;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.ResponseBody;
 import rx.Observable;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.Exceptions;
 import rx.functions.Action1;
@@ -59,12 +61,19 @@ public final class LookupCacher {
   public void cacheLookupsToDb() {
     Log.d("BLERG", "subscribing");
     lookups
+        .sample(200, TimeUnit.MILLISECONDS)
         .observeOn(Schedulers.io())
         .flatMap(new Func1<Lookup, Observable<LookupAndResponse>>() {
           @Override
           public Observable<LookupAndResponse> call(final Lookup passage) {
             return Esv.service()
                 .lookup(passage.toString())
+                .onErrorResumeNext(new Func1<Throwable, Observable<? extends ResponseBody>>() {
+                  @Override public Observable<? extends ResponseBody> call(Throwable throwable) {
+                    Log.e("LookupCacher", "Recieved error: " + throwable, throwable);
+                    return Observable.empty();
+                  }
+                })
                 .map(new Func1<ResponseBody, LookupAndResponse>() {
                   @Override public LookupAndResponse call(ResponseBody responseBody) {
                     return new LookupAndResponse(passage, responseBody);

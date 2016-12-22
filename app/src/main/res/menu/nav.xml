@@ -8,8 +8,8 @@
       android:icon="@drawable/ic_class_black_24dp"
       android:title="@string/nav_read"/>
   <item
-      android:id="@+id/nav_settings"
+      android:id="@+id/nav_search"
       android:enabled="true"
-      android:icon="@drawable/ic_settings_black_24dp"
-      android:title="@string/nav_settings"/>
+      android:icon="@drawable/ic_search_black_24dp"
+      android:title="@string/nav_search"/>
 </menu>

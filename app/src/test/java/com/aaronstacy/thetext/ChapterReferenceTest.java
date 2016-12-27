@@ -1,14 +1,13 @@
 package com.aaronstacy.thetext;
 
-import android.util.Log;
-
 import com.aaronstacy.thetext.db.ChapterReference;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.text.ParseException;
 
 import static org.junit.Assert.*;
 
@@ -41,6 +40,53 @@ public class ChapterReferenceTest {
         assertEquals(expected, actual);
         total += 1;
       }
+    }
+  }
+
+  @Test public void builderOfStringIsCorrect() throws Exception {
+    assertEquals(
+        ChapterReference.builder()
+            .of("Romans 3")
+            .build(),
+        ChapterReference.builder()
+            .book("Romans")
+            .chapter(3)
+            .build());
+    assertEquals(
+        ChapterReference.builder()
+            .of("1 Corinthians 2")
+            .build(),
+        ChapterReference.builder()
+            .book("1 Corinthians")
+            .chapter(2)
+            .build());
+    assertEquals(
+        ChapterReference.builder()
+            .of("Romans")
+            .chapter(3)
+            .build(),
+        ChapterReference.builder()
+            .book("Romans")
+            .chapter(3)
+            .build());
+    assertEquals(
+        ChapterReference.builder()
+            .book("Romans")
+            .of("3")
+            .build(),
+        ChapterReference.builder()
+            .book("Romans")
+            .chapter(3)
+            .build());
+  }
+
+  @Test(expected = ParseException.class) public void builderOfStringThrows() throws Exception {
+    ChapterReference.builder().of("not a book").build();
+  }
+
+  @Test public void toIndexIsCorrect() {
+    for (int i = 0; i < ChapterReference.CHAPTER_COUNT; i++) {
+      assertEquals(ChapterReference.fromIndex(i).toIndex(), i);
     }
   }
 }

@@ -11,7 +11,7 @@ import javax.inject.Inject;
 public final class TheTextApp extends Application {
   private TheTextComponent component;
 
-  @Inject LookupCacher lookupCacher;
+  @SuppressWarnings("WeakerAccess") @Inject LookupCacher lookupCacher;
 
   @Override public void onCreate() {
     super.onCreate();

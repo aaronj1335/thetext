@@ -4,8 +4,7 @@ import android.os.Parcelable;
 
 import com.google.auto.value.AutoValue;
 
-@AutoValue
-public abstract class Lookup implements Parcelable {
+@AutoValue public abstract class Lookup implements Parcelable {
   public abstract BookReference book();
   public abstract int chapter();
 
@@ -17,8 +16,7 @@ public abstract class Lookup implements Parcelable {
     return book() + " " + chapter();
   }
 
-  @AutoValue.Builder
-  public abstract static class Builder {
+  @AutoValue.Builder public abstract static class Builder {
     public abstract Builder book(BookReference value);
 
     public Builder book(String name) {

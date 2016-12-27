@@ -39,7 +39,7 @@ public abstract class Chapter implements Parcelable {
   public ContentValues toContentValues() {
     ContentValues contentValues = new ContentValues();
     contentValues.put(TRANSLATION, translation());
-    contentValues.put(BOOK, chapterReference().book().toString());
+    contentValues.put(BOOK, chapterReference().book().index());
     contentValues.put(CHAPTER, chapterReference().chapter());
     contentValues.put(TEXT, text());
     return contentValues;

@@ -1,8 +1,12 @@
 package com.aaronstacy.thetext.db;
 
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import com.google.auto.value.AutoValue;
+
+import java.text.ParseException;
+import java.util.Arrays;
 
 @AutoValue
 public abstract class ChapterReference implements Parcelable {
@@ -24,12 +28,40 @@ public abstract class ChapterReference implements Parcelable {
       return this.book(BookReference.builder().index(value).build());
     }
 
+    public Builder of(String chapterReferenceString) throws ParseException {
+      String[] parts = chapterReferenceString.split("\\s+");
+
+      if (parts.length == 0) {
+        return this;
+      }
+
+      try {
+        this.chapter(Integer.parseInt(parts[parts.length - 1]));
+        parts = Arrays.copyOfRange(parts, 0, parts.length - 1);
+      } catch (NumberFormatException ignored) {}
+
+      if (parts.length > 0) {
+        try {
+          this.book(TextUtils.join(" ", parts));
+        } catch (NullPointerException error) {
+          throw new ParseException("Could not parse into book: '" + TextUtils.join(" ", parts) +
+              "'", 0);
+        }
+      }
+
+      return this;
+    }
+
     public abstract Builder chapter(int value);
     public abstract ChapterReference build();
   }
 
   public static Builder builder() {
     return new AutoValue_ChapterReference.Builder();
+  }
+
+  public int toIndex() {
+    return BookReference.CHAPTER_SUMS[book().index()] + chapter() - 1;
   }
 
   public static ChapterReference fromIndex(int index) {

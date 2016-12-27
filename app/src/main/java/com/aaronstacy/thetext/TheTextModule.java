@@ -13,7 +13,7 @@ import dagger.Provides;
 @Module(
   includes = {ApiModule.class, DbModule.class}
 )
-public final class TheTextModule {
+final class TheTextModule {
   private final Application application;
 
   TheTextModule(Application application) {

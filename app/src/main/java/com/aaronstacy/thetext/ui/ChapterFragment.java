@@ -1,6 +1,6 @@
 package com.aaronstacy.thetext.ui;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -31,11 +31,10 @@ import rx.subjects.PublishSubject;
 
 public final class ChapterFragment extends Fragment {
   private WebView chapterTextView;
-  private BehaviorSubject<ChapterReference> chapterReferenceInput =
+  private final BehaviorSubject<ChapterReference> chapterReferenceInput =
       BehaviorSubject.create(ChapterReference.builder().book("Genesis").chapter(1).build());
-  @Inject PublishSubject<Lookup> lookups;
-  @Inject BriteDatabase db;
-
+  @SuppressWarnings("WeakerAccess") @Inject PublishSubject<Lookup> lookups;
+  @SuppressWarnings("WeakerAccess") @Inject BriteDatabase db;
 
   private Chapter chapter = null;
   private Subscription subscription;
@@ -49,9 +48,9 @@ public final class ChapterFragment extends Fragment {
     }
   }
 
-  @Override public void onAttach(Activity activity) {
-    super.onAttach(activity);
-    TheTextApp.component(activity).inject(this);
+  @Override public void onAttach(Context context) {
+    super.onAttach(context);
+    TheTextApp.component(getActivity()).inject(this);
     maybeSetChapterReference(getArguments());
   }
 
@@ -84,7 +83,7 @@ public final class ChapterFragment extends Fragment {
           }
         });
 
-    Observable<Model> chapters = chapterReferenceInput
+    Observable<Model> chapters = distinctChapterReferences
         .flatMap(new Func1<ChapterReference, Observable<Model>>() {
           @Override public Observable<Model> call(final ChapterReference chapterReference) {
             // Fetch the chapter from the network in parallel with the database lookup. If the value
@@ -92,7 +91,7 @@ public final class ChapterFragment extends Fragment {
             // way.
             lookups.onNext(Lookup.builder().chapterReference(chapterReference).build());
 
-            String book = chapterReference.book().toString();
+            String book = String.valueOf(chapterReference.book().index());
             String chapter = String.valueOf(chapterReference.chapter());
 
             return db.createQuery(Chapter.TABLE, Chapter.CHAPTER_QUERY, book, chapter)
@@ -117,24 +116,27 @@ public final class ChapterFragment extends Fragment {
         // the previous chapter could be emitted, creating a momentarily invalid state. This ensures
         // that Chapter's are only emitted if they match the latest inputChapterReference.
         .withLatestFrom(distinctChapterReferences, new Func2<Model, ChapterReference, Model>() {
-          @Override public Model call(Model state, ChapterReference latestInputChapterReference) {
-            return latestInputChapterReference.equals(state.chapterReference())? state : null;
+          @Override public Model call(Model model, ChapterReference latestInputChapterReference) {
+            return latestInputChapterReference.equals(model.chapterReference())? model : null;
           }
         })
         .filter(new Func1<Model, Boolean>() {
           @Override public Boolean call(Model model) {
             return model != null;
           }
-        });
+        })
+
+        // Calling distinct here ensures that if something is already in the DB, we don't re-bind to
+        // the same model after an API call returns.
+        .distinct();
 
     subscription = Observable.merge(references, chapters)
         .observeOn(AndroidSchedulers.mainThread())
-        .doOnNext(new Action1<Model>() {
+        .subscribe(new Action1<Model>() {
           @Override public void call(Model model) {
             ChapterFragment.this.bind(model);
           }
-        })
-        .subscribe();
+        });
   }
 
   @Override public void onPause() {
@@ -144,21 +146,20 @@ public final class ChapterFragment extends Fragment {
   }
 
   private void bind(Model model) {
-    if (model.chapter() == null) {
+    Chapter chapter = model.chapter();
+    if (chapter == null) {
       chapterTextView.setVisibility(View.INVISIBLE);
     } else {
-      chapterTextView.loadData(model.chapter().text(), "text/html", null);
+      chapterTextView.loadData(chapter.text(), "text/html", null);
       chapterTextView.setVisibility(View.VISIBLE);
     }
   }
 
-  @AutoValue
-  static abstract class Model implements Parcelable {
+  @AutoValue static abstract class Model implements Parcelable {
     public abstract ChapterReference chapterReference();
     @Nullable public abstract Chapter chapter();
 
-    @AutoValue.Builder
-    abstract static class Builder {
+    @AutoValue.Builder abstract static class Builder {
       abstract Builder chapterReference(ChapterReference value);
       abstract Builder chapter(Chapter value);
       abstract Model build();

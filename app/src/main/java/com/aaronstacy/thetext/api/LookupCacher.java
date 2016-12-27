@@ -1,8 +1,6 @@
 package com.aaronstacy.thetext.api;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
-import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.aaronstacy.thetext.db.Chapter;
@@ -14,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.ResponseBody;
 import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.Exceptions;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -54,14 +50,23 @@ public final class LookupCacher {
   }
 
   public static LookupCacher create(PublishSubject<Lookup> lookups, BriteDatabase db) {
-    Log.d("BLERG", "created");
     return new LookupCacher(lookups, db);
   }
 
   public void cacheLookupsToDb() {
-    Log.d("BLERG", "subscribing");
     lookups
+        // If we get a bunch of lookups, we only want to take the most recent, but the chapter pager
+        // may render up to 3 chapters at a time, so save the most recent couple ViewPagers's worth
+        // of lookups and just make those.
+        // TODO: dedupe the chapters in this window
+        .window(6)
         .sample(200, TimeUnit.MILLISECONDS)
+        .flatMap(new Func1<Observable<Lookup>, Observable<Lookup>>() {
+          @Override public Observable<Lookup> call(Observable<Lookup> lookupObservable) {
+            return lookupObservable;
+          }
+        })
+
         .observeOn(Schedulers.io())
         .flatMap(new Func1<Lookup, Observable<LookupAndResponse>>() {
           @Override
@@ -94,7 +99,7 @@ public final class LookupCacher {
             }
           }
         })
-        .doOnNext(new Action1<LookupAndResponseWithBody>() {
+        .subscribe(new Action1<LookupAndResponseWithBody>() {
           @Override public void call(LookupAndResponseWithBody input) {
             Chapter chapter = Chapter.builder()
                 .book(input.lookup.book())
@@ -104,7 +109,6 @@ public final class LookupCacher {
             ContentValues values = chapter.toContentValues();
             db.insert(Chapter.TABLE, values, CONFLICT_REPLACE);
           }
-        })
-        .subscribe();
+        });
   }
 }

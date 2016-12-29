@@ -74,7 +74,8 @@ public final class ChapterFragment extends Fragment {
 
   @Override public void onResume() {
     super.onResume();
-    Observable<ChapterReference> distinctChapterReferences = chapterReferenceInput.distinct();
+    Observable<ChapterReference> distinctChapterReferences =
+        chapterReferenceInput.distinctUntilChanged();
 
     Observable<Model> references = distinctChapterReferences
         .map(new Func1<ChapterReference, Model>() {
@@ -128,7 +129,7 @@ public final class ChapterFragment extends Fragment {
 
         // Calling distinct here ensures that if something is already in the DB, we don't re-bind to
         // the same model after an API call returns.
-        .distinct();
+        .distinctUntilChanged();
 
     subscription = Observable.merge(references, chapters)
         .observeOn(AndroidSchedulers.mainThread())

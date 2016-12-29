@@ -3,6 +3,7 @@ package com.aaronstacy.thetext.api;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.ArrayMap;
 
 import com.aaronstacy.thetext.db.ChapterReference;
 import com.aaronstacy.thetext.rx.Join;
@@ -26,7 +27,8 @@ public final class RecentChapters implements SharedPreferences.OnSharedPreferenc
   private static final String DELIMITER = ",";
   private final BehaviorSubject<List<ChapterReference>> recentLookups =
       BehaviorSubject.create(Collections.<ChapterReference>emptyList());
-  private final Observable<List<ChapterReference>> distinctRecentLookups = recentLookups.distinct();
+  private final Observable<List<ChapterReference>> distinctRecentLookups =
+      recentLookups.distinctUntilChanged();
   private final Application app;
 
   private RecentChapters(final Application app) {
@@ -59,13 +61,14 @@ public final class RecentChapters implements SharedPreferences.OnSharedPreferenc
     Observable.just(chapterReference)
         .observeOn(Schedulers.io())
         .concatWith(Observable.from(recentLookups.getValue()))
+        .distinct()
         .take(MAX_RECENT_CHAPTERS)
         .flatMap(new Func1<ChapterReference, Observable<String>>() {
           @Override public Observable<String> call(ChapterReference ref) {
-            return Observable.just(ref.book().toString(), " ", String.valueOf(ref.chapter()));
+            return Observable.just(ref.book().toString(), " ", String.valueOf(ref.chapter()), ",");
           }
         })
-        .lift(Join.with(DELIMITER))
+        .skipLast(1)
         .reduce(new StringBuilder(), new Func2<StringBuilder, String, StringBuilder>() {
           @Override public StringBuilder call(StringBuilder stringBuilder, String s) {
             return stringBuilder.append(s);
@@ -91,6 +94,7 @@ public final class RecentChapters implements SharedPreferences.OnSharedPreferenc
 //        newValue.append(chapterReference.book()).append(" ").append(chapterReference.chapter());
 //        for (int i = 0; i < current.size() - 1; i++) {
 //          ChapterReference chapterReference = current.get(i);
+            // TODO: remove dupes
 //          newValue.append(chapterReference.book()).append(" ").append(chapterReference.chapter());
 //        }
 //        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

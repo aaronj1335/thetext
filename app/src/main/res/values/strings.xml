@@ -3,4 +3,9 @@
   <string name="nav_read">Read</string>
   <string name="nav_search">Search</string>
   <string name="lookup_chapter">Look up chapter…</string>
+  <string name="no_suggestions">No suggestions</string>
+  <string name="no_results_found">No results found</string>
+  <string name="no_recent_lookups">No recent lookups</string>
+  <string name="select_chapter">Select chapter</string>
+  <string name="go">Go</string>
 </resources>

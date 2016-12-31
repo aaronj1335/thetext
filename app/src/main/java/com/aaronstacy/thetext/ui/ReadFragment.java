@@ -13,6 +13,7 @@ import com.aaronstacy.thetext.db.Chapter;
 import com.aaronstacy.thetext.db.ChapterReference;
 
 public final class ReadFragment extends Fragment {
+  public static final String TAG = ReadFragment.class.getSimpleName();
 
   @Nullable @Override public View onCreateView(LayoutInflater inflater,
                                                @Nullable ViewGroup container,

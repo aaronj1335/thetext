@@ -35,6 +35,7 @@ public final class ChapterFragment extends Fragment {
       BehaviorSubject.create(ChapterReference.builder().book("Genesis").chapter(1).build());
   @SuppressWarnings("WeakerAccess") @Inject PublishSubject<Lookup> lookups;
   @SuppressWarnings("WeakerAccess") @Inject BriteDatabase db;
+  @SuppressWarnings("WeakerAccess") @Inject Observable<String> style;
 
   private Chapter chapter = null;
   private Subscription subscription;
@@ -102,11 +103,12 @@ public final class ChapterFragment extends Fragment {
                     return chapter != null;
                   }
                 })
-                .map(new Func1<Chapter, Model>() {
-                  @Override public Model call(Chapter chapter) {
+                .withLatestFrom(style, new Func2<Chapter, String, Model>() {
+                  @Override public Model call(Chapter chapter, String style) {
                     return Model.builder()
                         .chapterReference(chapter.chapterReference())
                         .chapter(chapter)
+                        .style(style)
                         .build();
                   }
                 });
@@ -147,11 +149,11 @@ public final class ChapterFragment extends Fragment {
   }
 
   private void bind(Model model) {
-    Chapter chapter = model.chapter();
-    if (chapter == null) {
+    String chapterHtml = model.chapterHtml();
+    if (chapterHtml == null) {
       chapterTextView.setVisibility(View.INVISIBLE);
     } else {
-      chapterTextView.loadData(chapter.text(), "text/html", null);
+      chapterTextView.loadData(chapterHtml, "text/html", null);
       chapterTextView.setVisibility(View.VISIBLE);
     }
   }
@@ -159,11 +161,34 @@ public final class ChapterFragment extends Fragment {
   @AutoValue static abstract class Model implements Parcelable {
     public abstract ChapterReference chapterReference();
     @Nullable public abstract Chapter chapter();
+    @Nullable public abstract String style();
+
+    @Nullable public String chapterHtml() {
+      if (chapter() == null) {
+        return null;
+      }
+
+      return "<!doctype html><html><head><style>" +
+          style() +
+          "</style></head><body>" +
+          chapter().text() +
+          "</body></html>";
+    }
 
     @AutoValue.Builder abstract static class Builder {
       abstract Builder chapterReference(ChapterReference value);
       abstract Builder chapter(Chapter value);
-      abstract Model build();
+      abstract Builder style(String value);
+      abstract Model autoBuild();
+
+      Model build() {
+        Model model = autoBuild();
+        if (model.chapter() == null && model.style() != null ||
+            model.chapter() != null && model.style() == null) {
+          throw new IllegalStateException("chapter and style must be set together");
+        }
+        return model;
+      }
     }
 
     public static Builder builder() {

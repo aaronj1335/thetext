@@ -17,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -40,18 +39,17 @@ import javax.inject.Inject;
 import rx.Observable;
 import rx.Subscription;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.subjects.BehaviorSubject;
 import rx.subjects.PublishSubject;
 
 import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
 public final class SearchFragment
     extends Fragment
-    implements TextView.OnEditorActionListener, TextWatcher {
+    implements TextView.OnEditorActionListener, TextWatcher, View.OnFocusChangeListener {
+  public static final String TAG = SearchFragment.class.getSimpleName();
   private static final String SEARCH_TEXT = "SEARCH_TEXT";
   private EditText lookup;
   private Adapter adapter;
@@ -95,6 +93,7 @@ public final class SearchFragment
     lookup = (EditText) view.findViewById(R.id.lookup);
     lookup.addTextChangedListener(this);
     lookup.setOnEditorActionListener(this);
+    lookup.setOnFocusChangeListener(this);
 
     RecyclerView results = (RecyclerView) view.findViewById(R.id.results);
     results.setHasFixedSize(true);
@@ -112,14 +111,6 @@ public final class SearchFragment
 
   @Override public void onResume() {
     super.onResume();
-
-    // Is this really the best way to show the keyboard onResume?
-    lookup.postDelayed(new Runnable() {
-      @Override public void run() {
-        ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
-            .toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
-      }
-    }, 0);
 
     Observable<Model> suggestions = Observable.combineLatest(searchText, recentChapters.asObservable(),
         new Func2<String, List<ChapterReference>, List<Suggestion>>() {
@@ -171,6 +162,16 @@ public final class SearchFragment
   @Override public void afterTextChanged(Editable editable) {}
   @Override public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
     searchText.onNext(String.valueOf(charSequence));
+  }
+
+  @Override public void onFocusChange(View view, boolean hasFocus) {
+    InputMethodManager inputMethodManager = (InputMethodManager) getActivity()
+        .getSystemService(Context.INPUT_METHOD_SERVICE);
+    if (hasFocus) {
+      inputMethodManager.showSoftInput(view, 0);
+    } else {
+      inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
   }
 
   private class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {

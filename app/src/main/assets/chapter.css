@@ -1,0 +1,37 @@
+.chapter-num {
+  display: none;
+}
+
+/* hide the flash object that esvbible.org uses for tracking (probably does nothing) */
+object {
+  display: none;
+}
+
+.verse-num {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
+a {
+  color: black;
+}
+
+a:visited {
+  color: black;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+body {
+  padding: 0 15px 50px 15px;
+}
+
+p {
+  text-align: justify;
+}

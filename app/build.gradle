@@ -27,6 +27,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.takisoft.fix:preference-v7:25.0.1.0'
 
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'io.reactivex:rxandroid:1.2.1'
@@ -35,6 +36,7 @@ dependencies {
     compile 'com.android.support:design:25.1.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
     compile 'com.squareup.sqlbrite:sqlbrite:0.8.0'
+    compile 'com.f2prateek.rx.preferences:rx-preferences:1.0.2'
 
     apt 'com.google.dagger:dagger-compiler:2.7'
     compile 'com.google.dagger:dagger:2.7'

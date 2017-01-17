@@ -1,7 +1,5 @@
 package com.aaronstacy.thetext.api;
 
-import android.app.Application;
-
 import com.aaronstacy.thetext.db.DbModule;
 import com.aaronstacy.thetext.db.Lookup;
 import com.squareup.sqlbrite.BriteDatabase;
@@ -22,9 +20,5 @@ public final class ApiModule {
 
   @Provides @Singleton LookupCacher lookupCacher(PublishSubject<Lookup> lookups, BriteDatabase db) {
     return LookupCacher.create(lookups, db);
-  }
-
-  @Provides @Singleton RecentChapters recentLookups(Application app) {
-    return RecentChapters.create(app);
   }
 }

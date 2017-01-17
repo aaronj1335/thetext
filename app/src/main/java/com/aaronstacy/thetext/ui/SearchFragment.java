@@ -25,7 +25,7 @@ import com.aaronstacy.thetext.R;
 import com.aaronstacy.thetext.TheTextApp;
 import com.aaronstacy.thetext.api.LookupSuggestions;
 import com.aaronstacy.thetext.api.LookupSuggestions.Suggestion;
-import com.aaronstacy.thetext.api.RecentChapters;
+import com.aaronstacy.thetext.prefs.RecentChapters;
 import com.aaronstacy.thetext.db.BookReference;
 import com.aaronstacy.thetext.db.ChapterReference;
 import com.google.auto.value.AutoValue;
@@ -179,7 +179,7 @@ public final class SearchFragment
       private final View view;
       private final ImageButton selectChapter;
       private Suggestion suggestion;
-      private View.OnClickListener goToChapter = new View.OnClickListener() {
+      private final View.OnClickListener goToChapter = new View.OnClickListener() {
         @Override public void onClick(View view) {
           if (suggestion.chapter() != null) {
             selectChapter(suggestion.chapter());
@@ -193,7 +193,7 @@ public final class SearchFragment
         super(view);
         this.view = view;
         view.setOnClickListener(goToChapter);
-        ((ImageButton) view.findViewById(R.id.go)).setOnClickListener(goToChapter);
+        view.findViewById(R.id.go).setOnClickListener(goToChapter);
         selectChapter = (ImageButton) view.findViewById(R.id.select_chapter);
         selectChapter.setOnClickListener(new View.OnClickListener() {
           @Override public void onClick(View view) {

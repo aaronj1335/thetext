@@ -1,11 +1,12 @@
 package com.aaronstacy.thetext.ui;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.BackStackEntry;
+import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.ArrayMap;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 public class MainActivity
     extends AppCompatActivity
-    implements BottomNavigationView.OnNavigationItemSelectedListener, OnChapterListener {
+    implements OnNavigationItemSelectedListener, OnChapterListener, OnBackStackChangedListener {
 
   private BottomNavigationView nav;
   private static final Map<String, Integer> tagToId = new ArrayMap<>();
@@ -27,63 +28,56 @@ public class MainActivity
   static {
     tagToId.put(ReadFragment.TAG, R.id.nav_read);
     tagToId.put(SearchFragment.TAG, R.id.nav_search);
+    tagToId.put(SettingsFragment.TAG, R.id.nav_settings);
   }
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
-    if (savedInstanceState == null) {
-      getSupportFragmentManager().beginTransaction()
-          .replace(R.id.main, ReadFragment.newInstance())
-          .commit();
-
-    }
+    getSupportFragmentManager().addOnBackStackChangedListener(this);
 
     nav = (BottomNavigationView) findViewById(R.id.nav);
+
+    if (savedInstanceState == null) {
+      navigateTo(ReadFragment.newInstance(), ReadFragment.TAG);
+    }
+
     nav.setOnNavigationItemSelectedListener(this);
   }
 
   @Override public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-    String currentTag = getCurrentTag();
-    switch (item.getItemId()) {
-      case (R.id.nav_read):
-        navigateTo(ReadFragment.newInstance(), ReadFragment.TAG);
-        break;
-      case (R.id.nav_search):
-        navigateTo(SearchFragment.newInstance(), SearchFragment.TAG);
-        break;
+    if (!tagToId.get(getCurrentTag()).equals(item.getItemId())) {
+      switch (item.getItemId()) {
+        case (R.id.nav_read):
+          navigateTo(ReadFragment.newInstance(), ReadFragment.TAG);
+          break;
+        case (R.id.nav_search):
+          navigateTo(SearchFragment.newInstance(), SearchFragment.TAG);
+          break;
+        case (R.id.nav_settings):
+          navigateTo(SettingsFragment.newInstance(), SettingsFragment.TAG);
+          break;
+      }
     }
     return true;
   }
 
   private void navigateTo(Fragment fragment, @NonNull String tag) {
-    if (!tag.equals(getCurrentTag())) {
-      nav.getMenu().findItem(tagToId.get(tag)).setChecked(true);
-      getSupportFragmentManager().beginTransaction()
-          .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_right)
-          .replace(R.id.main, fragment)
-          .addToBackStack(tag)
-          .commit();
-    }
+    getSupportFragmentManager().beginTransaction()
+        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+        .replace(R.id.main, fragment, tag)
+        .addToBackStack(tag)
+        .commit();
   }
 
-  @Nullable private String getCurrentTag() {
+  @NonNull private String getCurrentTag() {
     FragmentManager manager = getSupportFragmentManager();
     if (manager.getBackStackEntryCount() <= 0) {
-      return null;
+      return ReadFragment.TAG;
     }
     BackStackEntry entry = manager.getBackStackEntryAt(manager.getBackStackEntryCount() - 1);
-    return entry != null? entry.getName() : null;
-  }
-
-  @Nullable private String getPreviousTag() {
-    FragmentManager manager = getSupportFragmentManager();
-    if (manager.getBackStackEntryCount() <= 1) {
-      return null;
-    }
-    BackStackEntry entry = manager.getBackStackEntryAt(manager.getBackStackEntryCount() - 2);
-    return entry != null? entry.getName() : null;
+    return entry.getName();
   }
 
   @Override public void onChapterSelected(ChapterReference chapterReference) {
@@ -94,12 +88,19 @@ public class MainActivity
     navigateTo(fragment, ReadFragment.TAG);
   }
 
+  @Override public void onBackStackChanged() {
+    nav.getMenu().findItem(tagToId.get(getCurrentTag())).setChecked(true);
+  }
+
   @Override public void onBackPressed() {
-    int id = getPreviousTag() == null? R.id.nav_read : tagToId.get(getPreviousTag());
-    MenuItem item = nav.getMenu().findItem(id);
-    if (item != null) {
-      item.setChecked(true);
+    // u thought window.pushState was the worst navigation api
+    FragmentManager fragmentManager = getSupportFragmentManager();
+    if (fragmentManager.getBackStackEntryCount() > 1) {
+      fragmentManager.popBackStack();
+      fragmentManager.popBackStack(ReadFragment.TAG, 0);
+    } else {
+      fragmentManager.popBackStackImmediate();
+      super.onBackPressed();
     }
-    super.onBackPressed();
   }
 }

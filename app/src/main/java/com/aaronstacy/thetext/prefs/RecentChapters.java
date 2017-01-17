@@ -1,12 +1,10 @@
-package com.aaronstacy.thetext.api;
+package com.aaronstacy.thetext.prefs;
 
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.ArrayMap;
 
 import com.aaronstacy.thetext.db.ChapterReference;
-import com.aaronstacy.thetext.rx.Join;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -21,9 +19,10 @@ import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subjects.BehaviorSubject;
 
+// TODO: refactor to use RxSharedPreferences
 public final class RecentChapters implements SharedPreferences.OnSharedPreferenceChangeListener {
   private final String PREFS = "RecentChapters";
-  private static final int MAX_RECENT_CHAPTERS = 10;
+  private static final int MAX_RECENT_CHAPTERS = 30;
   private static final String DELIMITER = ",";
   private final BehaviorSubject<List<ChapterReference>> recentLookups =
       BehaviorSubject.create(Collections.<ChapterReference>emptyList());

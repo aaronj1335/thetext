@@ -10,20 +10,35 @@ import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import com.aaronstacy.thetext.R;
+import com.aaronstacy.thetext.TheTextApp;
 import com.aaronstacy.thetext.db.Chapter;
 import com.aaronstacy.thetext.db.ChapterReference;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import rx.Subscription;
+import rx.functions.Action1;
+import rx.subjects.BehaviorSubject;
+
 public class MainActivity
     extends AppCompatActivity
-    implements OnNavigationItemSelectedListener, OnChapterListener, OnBackStackChangedListener {
+    implements OnNavigationItemSelectedListener, OnChapterListener, OnBackStackChangedListener, Animation.AnimationListener {
 
   private BottomNavigationView nav;
   private static final Map<String, Integer> tagToId = new ArrayMap<>();
+  private Subscription subscription;
+  private Animation slideUp;
+  private Animation slideDown;
+  @SuppressWarnings("WeakerAccess") @Inject BehaviorSubject<Boolean> isNavVisible;
 
   static {
     tagToId.put(ReadFragment.TAG, R.id.nav_read);
@@ -33,9 +48,14 @@ public class MainActivity
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    TheTextApp.component(this).inject(this);
     setContentView(R.layout.main);
 
     getSupportFragmentManager().addOnBackStackChangedListener(this);
+    slideUp = AnimationUtils.loadAnimation(this, R.anim.slide_up);
+    slideUp.setAnimationListener(this);
+    slideDown = AnimationUtils.loadAnimation(this, R.anim.slide_down);
+    slideDown.setAnimationListener(this);
 
     nav = (BottomNavigationView) findViewById(R.id.nav);
 
@@ -44,6 +64,23 @@ public class MainActivity
     }
 
     nav.setOnNavigationItemSelectedListener(this);
+  }
+
+  @Override protected void onResume() {
+    super.onResume();
+    subscription = isNavVisible.distinctUntilChanged()
+        .subscribe(new Action1<Boolean>() {
+          @Override public void call(Boolean isNavVisible) {
+            Log.d("BLERG", "nav animation: " + isNavVisible);
+            nav.startAnimation(isNavVisible? slideUp : slideDown);
+          }
+        });
+  }
+
+  @Override protected void onPause() {
+    super.onPause();
+    subscription.unsubscribe();
+    subscription = null;
   }
 
   @Override public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -64,6 +101,7 @@ public class MainActivity
   }
 
   private void navigateTo(Fragment fragment, @NonNull String tag) {
+    isNavVisible.onNext(true);
     getSupportFragmentManager().beginTransaction()
         .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
         .replace(R.id.main, fragment, tag)
@@ -103,4 +141,14 @@ public class MainActivity
       super.onBackPressed();
     }
   }
+
+  @Override public void onAnimationStart(Animation animation) {
+    nav.setVisibility(isNavVisible.getValue()? View.VISIBLE : View.INVISIBLE);
+  }
+
+  @Override public void onAnimationEnd(Animation animation) {
+    nav.setVisibility(isNavVisible.getValue()? View.VISIBLE : View.INVISIBLE);
+  }
+
+  @Override public void onAnimationRepeat(Animation animation) {}
 }

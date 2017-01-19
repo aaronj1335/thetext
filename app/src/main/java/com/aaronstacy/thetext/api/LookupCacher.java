@@ -33,13 +33,11 @@ public final class LookupCacher {
     }
   }
 
-  private static class LookupAndResponseWithBody {
+  private static class LookupWithBody {
     final Lookup lookup;
-    final ResponseBody response;
     final String body;
-    LookupAndResponseWithBody(Lookup lookup, ResponseBody response, String body) {
+    LookupWithBody(Lookup lookup, String body) {
       this.lookup = lookup;
-      this.response = response;
       this.body = body;
     }
   }
@@ -86,21 +84,18 @@ public final class LookupCacher {
                 });
           }
         })
-        .map(new Func1<LookupAndResponse, LookupAndResponseWithBody>() {
+        .map(new Func1<LookupAndResponse, LookupWithBody>() {
           @Override
-          public LookupAndResponseWithBody call(LookupAndResponse input) {
+          public LookupWithBody call(LookupAndResponse input) {
             try {
-              return new LookupAndResponseWithBody(
-                  input.lookup,
-                  input.response,
-                  input.response.string());
+              return new LookupWithBody(input.lookup, input.response.string());
             } catch (IOException e) {
               throw Exceptions.propagate(e);
             }
           }
         })
-        .subscribe(new Action1<LookupAndResponseWithBody>() {
-          @Override public void call(LookupAndResponseWithBody input) {
+        .subscribe(new Action1<LookupWithBody>() {
+          @Override public void call(LookupWithBody input) {
             Chapter chapter = Chapter.builder()
                 .book(input.lookup.book())
                 .chapter(input.lookup.chapter())

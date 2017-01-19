@@ -41,7 +41,7 @@ public final class AssetModule {
             }
             //noinspection LoopStatementThatDoesntLoop
             for (;;) {
-              int size = 0;
+              int size;
               try {
                 size = reader.read(buffer, 0, buffer.length);
               } catch (IOException exception) {

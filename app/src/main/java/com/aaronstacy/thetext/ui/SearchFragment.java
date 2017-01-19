@@ -198,6 +198,8 @@ public final class SearchFragment
         selectChapter.setOnClickListener(new View.OnClickListener() {
           @Override public void onClick(View view) {
             final BookReference book = suggestion.book();
+            // This will be hidden if book is null, so we can assume it's non-null
+            //noinspection ConstantConditions
             int chapterCount = BookReference.CHAPTER_COUNTS[book.index()];
             String[] chapters = new String[chapterCount];
             for (int i = 0; i < chapterCount; i++) {
@@ -218,8 +220,9 @@ public final class SearchFragment
       void bind(Suggestion suggestion) {
         this.suggestion = suggestion;
         TextView textView = (TextView) view.findViewById(R.id.text);
-        if (suggestion.book() != null) {
-          textView.setText(suggestion.book().toString());
+        BookReference book = suggestion.book();
+        if (book != null) {
+          textView.setText(book.toString());
           selectChapter.setVisibility(View.VISIBLE);
         } else {
           ChapterReference reference = suggestion.chapter();

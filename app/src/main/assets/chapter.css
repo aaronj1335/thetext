@@ -68,3 +68,7 @@ h3:first-child {
   margin-top: 0;
   font-weight: normal;
 }
+
+.footnotes {
+  font-size: 0.8rem;
+}

@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.ScrollView;
 
 import com.aaronstacy.thetext.R;
 import com.aaronstacy.thetext.TheTextApp;
@@ -33,12 +34,12 @@ public final class ChapterFragment extends Fragment {
   private WebView chapterTextView;
   private final BehaviorSubject<ChapterReference> chapterReferenceInput =
       BehaviorSubject.create(ChapterReference.builder().book("Genesis").chapter(1).build());
+  private Subscription subscription;
   @SuppressWarnings("WeakerAccess") @Inject PublishSubject<Lookup> lookups;
   @SuppressWarnings("WeakerAccess") @Inject BriteDatabase db;
   @SuppressWarnings("WeakerAccess") @Inject Observable<String> style;
-
-  private Chapter chapter = null;
-  private Subscription subscription;
+  @SuppressWarnings("WeakerAccess")
+  @Inject NavVisibilityController navVisibilityController;
 
   private void maybeSetChapterReference(@Nullable Bundle bundle) {
     if (bundle != null) {
@@ -65,6 +66,7 @@ public final class ChapterFragment extends Fragment {
                                                @Nullable Bundle savedInstanceState) {
     View rootView = inflater.inflate(R.layout.chapter, container, false);
     chapterTextView = (WebView) rootView.findViewById(R.id.chapter_text);
+    navVisibilityController.view((ScrollView) rootView.findViewById(R.id.chapter_text_scroller));
     return rootView;
   }
 
@@ -168,6 +170,7 @@ public final class ChapterFragment extends Fragment {
         return null;
       }
 
+      //noinspection ConstantConditions
       return "<!doctype html><html><head><style>" +
           style() +
           "</style></head><body>" +
